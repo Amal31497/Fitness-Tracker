@@ -14,12 +14,13 @@ const addButton = document.querySelector("button.add-another");
 const toast = document.querySelector("#toast");
 const newWorkout = document.querySelector(".new-workout")
 
+
 let workoutType = null;
 let shouldNavigateAway = false;
 
 async function initExercise() {
   let workout;
-
+  console.log(workout)
   if (location.search.split("=")[1] === undefined) {
     workout = await API.createWorkout()
     console.log(workout)

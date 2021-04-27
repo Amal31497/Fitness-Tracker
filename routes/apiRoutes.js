@@ -1,20 +1,22 @@
 const router = require("express").Router();
-const db = require("../models");
+const Workout = require('../models/Workout.js');
 
-router.get("/api/workouts", async(req,res)=>{
-    
+router.get('/api/workouts', async (req, res) => {
     try {
-        const workout = await db.Workout.find({}).sort({_id:-1}).limit(1);
-        res.json(workout)
+        const workout = await Workout.aggregate([
+            {$addFields: { totalDuration: {$sum: '$exercises.duration'}}},
+        ])
+        res.status(200).json(workout)
     } catch (err) {
         res.status(500).json(err)
     }
+    
 
-})
+});
 
 router.put("/api/workouts/:id", async (req,res)=>{
     try {
-        const workout = await db.Workout.findByIdAndUpdate( req.params.id , { $push: { exercises: req.body } }, { new: true })
+        const workout = await Workout.findByIdAndUpdate( req.params.id , { $push: { exercises: req.body } }, { new: true })
 
         res.status(200).json(workout)
     } catch (err) {
@@ -25,7 +27,7 @@ router.put("/api/workouts/:id", async (req,res)=>{
 
 router.post("/api/workouts",async ({body},res)=>{
     try {
-        const workout = await db.Workout.create({body})
+        const workout = await Workout.create({body})
 
         res.status(200).json(workout)
     } catch (err) {
@@ -33,8 +35,27 @@ router.post("/api/workouts",async ({body},res)=>{
     }
 })
 
-// router.get("/api/workout/range", async(req,res)=>{
+router.get('/api/workouts/range', async (req, res) => {
+    try {
+        const workout = await Workout.aggregate([
+            {$addFields: {totalDuration: {$sum: '$exercises.duration',},},},
+        ]).sort({ 'day': -1 }).limit(7)
 
-// })
+        res.status(200).json(workout)
+    } catch (err) {
+        res.status(500).json(err)
+    }
+    
+});
+
+router.delete('/api/workouts/:id', async ({ body }, res) => {
+    try {
+        const workout = await Workout.findByIdAndDelete(body._id);
+
+        res.status(200).json(workout)
+    } catch (err) {
+        res.status(400).json(err)
+    }
+});
 
 module.exports = router;
